@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+  - name: write
+    image: centos
+    command: ["bash","-c","for i in {1..100};do echo $i >> /data/hello;sleep 1;done"]
+    volumeMounts:
+      - name: data
+        mountPath: /data
+
+  - name: read
+    image: centos
+    command: ["bash","-c","tail -f /data/hello"]
+    volumeMounts:
+      - name: data
+        mountPath: /data
+
+  volumes:
+  - name: data
+    emptyDir: {}

@@ -1,0 +1,29 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        # 启用数据卷的名字为wwwroot,并挂载到nginx的html目录下
+        volumeMounts:
+        - name: wwwroot
+          mountPath: /usr/share/nginx/html
+        ports:
+        - containerPort: 80
+    # 定义数据卷名字为wwwroot,类型为nfs
+      volumes:
+      - name: wwwroot
+        nfs:
+          server: 172.16.194.130
+          path: /opt/container_data

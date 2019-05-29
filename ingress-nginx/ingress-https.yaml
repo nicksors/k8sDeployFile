@@ -1,0 +1,23 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nginx-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  tls:
+  - hosts:
+    - dashboard.kubernetes.com
+    secretName: dashboard-secret
+  rules:
+    - host: dashboard.kubernetes.com
+      http:
+        paths:
+        - path: /nginx
+          backend:
+            serviceName: nginx
+            servicePort: 80
+        - path: /k8s
+          backend:
+            serviceName: kubernetes-dashboard
+            servicePort: 80
