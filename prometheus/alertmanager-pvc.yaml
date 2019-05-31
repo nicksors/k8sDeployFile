@@ -7,7 +7,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: EnsureExists
 spec:
-  storageClassName: standard
+  storageClassName: managed-nfs-storage
   accessModes:
     - ReadWriteOnce
   resources:

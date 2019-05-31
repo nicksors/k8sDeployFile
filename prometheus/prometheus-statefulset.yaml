@@ -70,13 +70,13 @@ spec:
               path: /-/ready
               port: 9090
             initialDelaySeconds: 30
-            timeoutSeconds: 30
+            timeoutSeconds: 300
           livenessProbe:
             httpGet:
               path: /-/healthy
               port: 9090
             initialDelaySeconds: 30
-            timeoutSeconds: 30
+            timeoutSeconds: 300
           # based on 10 running nodes with 30 pods each
           resources:
             limits:
@@ -92,11 +92,18 @@ spec:
             - name: prometheus-data
               mountPath: /data
               subPath: ""
+            - name: prometheus-rules
+              mountPath: /etc/config/rules
+
       terminationGracePeriodSeconds: 300
       volumes:
         - name: config-volume
           configMap:
             name: prometheus-config
+        - name: prometheus-rules
+          configMap:
+            name: prometheus-rules
+
   volumeClaimTemplates:
   - metadata:
       name: prometheus-data
