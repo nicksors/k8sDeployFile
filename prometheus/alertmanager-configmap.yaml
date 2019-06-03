@@ -13,7 +13,7 @@ data:
       smtp_smarthost: 'smtp.163.com:25'
       smtp_from: 'tyhtanyanhong@163.com'
       smtp_auth_username: 'tyhtanyanhong@163.com'
-      smtp_auth_password: '2392328717'
+      smtp_auth_password: '23923287171'
 
     receivers:
     - name: default-receiver
