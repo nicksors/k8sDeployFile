@@ -1,0 +1,76 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: tomcat-java-demo
+  namespace: test
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      project: www
+      app: java-demo
+  template:
+    metadata:
+      labels:
+        project: www
+        app: java-demo
+    spec:
+      imagePullSecrets:
+      - name: registry-pull-secret
+      containers:
+      - name: tomcat
+        image: 192.168.31.61/project/tomcat-java-demo:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: web
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 0.5
+            memory: 1Gi
+          limits:
+            cpu: 1
+            memory: 2Gi
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 60
+          timeoutSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 60
+          timeoutSeconds: 20
+        volumeMounts:
+        - name: tomcat-logs 
+          mountPath: /usr/local/tomcat/logs
+
+      - name: filebeat
+        image: docker.elastic.co/beats/filebeat:6.4.2
+        args: [
+          "-c", "/etc/filebeat.yml",
+          "-e",
+        ]
+        resources:
+          limits:
+            memory: 500Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+        - name: filebeat-config
+          mountPath: /etc/filebeat.yml
+          subPath: filebeat.yml
+        - name: tomcat-logs 
+          mountPath: /usr/local/tomcat/logs
+      volumes:
+      - name: tomcat-logs
+        emptyDir: {}
+      - name: filebeat-config
+        configMap:
+          name: filebeat-config

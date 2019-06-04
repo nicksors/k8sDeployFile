@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: filebeat-nginx-config
+  namespace: kube-system
+  
+data:
+  filebeat.yml: |-
+    filebeat.prospectors:
+      - type: log
+        paths:
+          - /var/log/nginx/access.log
+        # tags: ["access"]
+        fields:
+          app: www
+          type: nginx-access
+        fields_under_root: true
+
+      - type: log
+        paths:
+          - /var/log/nginx/error.log
+        # tags: ["error"]
+        fields:
+          app: www
+          type: nginx-error
+        fields_under_root: true
+
+    output.logstash:
+      hosts: ['172.16.194.128:5044']

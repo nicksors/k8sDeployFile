@@ -1,0 +1,70 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: nginx-demo
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      project: www
+      app: nginx-demo
+  template:
+    metadata:
+      labels:
+        project: www
+        app: nginx-demo
+    spec:
+      #imagePullSecrets:
+      #- name: registry-pull-secret
+      containers:
+      - name: nginx 
+        image: nicksors/nginx:v1
+        ports:
+        - containerPort: 80
+          name: web
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 0.5
+            memory: 256Mi
+          limits:
+            cpu: 1
+            memory: 1Gi
+        livenessProbe:
+          httpGet:
+            path: /index.html
+            port: 80
+          initialDelaySeconds: 6
+          timeoutSeconds: 20
+        volumeMounts:
+        - name: nginx-logs 
+          mountPath: /var/log/nginx/
+
+      - name: filebeat
+        image: docker.elastic.co/beats/filebeat:6.4.2
+        args: [
+          "-c", "/etc/filebeat.yml",
+          "-e",
+        ]
+        resources:
+          limits:
+            memory: 500Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+        - name: filebeat-config
+          mountPath: /etc/filebeat.yml
+          subPath: filebeat.yml
+        - name: nginx-logs 
+          mountPath: /var/log/nginx/
+
+      volumes:
+      - name: nginx-logs
+        emptyDir: {}
+      - name: filebeat-config
+        configMap:
+          name: filebeat-nginx-config

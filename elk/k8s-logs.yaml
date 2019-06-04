@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: ConfigMap # 保存Filebeat的配置信息
+metadata:
+  name: k8s-logs-filebeat-config
+  namespace: kube-system 
+  
+data:
+  filebeat.yml: |-
+    filebeat.prospectors:
+      - type: log
+        paths:
+          - /opt/kubernetes/logs/* # 指定k8s集群的采集日志目录，星号匹配所有该目录下的文件
+        fields:
+          app: k8s 
+          type: module 
+        fields_under_root: true
+
+    output.logstash:
+      hosts: ['172.16.194.128:5044'] # 这里写logstash启动的监听地址和端口
+
+---
+
+apiVersion: apps/v1
+kind: DaemonSet    # 使用DaemonSet方式将Filebeat部署到集群每个节点上 
+metadata:
+  name: k8s-logs  # Pod名称
+  namespace: kube-system  # 指定运行命名空间
+spec:
+  selector:
+    matchLabels:
+      project: k8s 
+      app: filebeat
+  template:
+    metadata:
+      labels:
+        project: k8s
+        app: filebeat
+    spec:
+      containers:
+      - name: filebeat
+        image: docker.elastic.co/beats/filebeat:6.4.2
+        args: [
+          "-c", "/etc/filebeat.yml",
+          "-e",
+        ]
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+          limits:
+            cpu: 500m
+            memory: 500Mi
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+        - name: filebeat-config
+          mountPath: /etc/filebeat.yml
+          subPath: filebeat.yml
+        - name: k8s-logs 
+          mountPath: /opt/kubernetes/logs
+      volumes:
+      - name: k8s-logs
+        hostPath: 
+          path: /opt/kubernetes/logs # 将主机上的目录挂载到Pod容器里
+      - name: filebeat-config
+        configMap:
+          name: k8s-logs-filebeat-config # 指定configmap挂载到Pod容器里
